@@ -249,15 +249,31 @@ Ponto de entrada da aplicação (endpoint).
 
 ## 🔄 Fluxo Geral
 
-doPost  
-  ↓  
-auth → token Podio  
-  ↓  
-buscar → REST + GraphQL  
-  ↓  
-leads → EXPA + Podio  
-  ↓  
-utils → respostaJson 
+## 🔄 Fluxo Geral do Projeto
+
+1. **doPost**  
+   Recebe o payload JSON via HTTP POST.
+
+2. **Cache → Buscar token**  
+   - Verifica se existe um access_token válido no cache.  
+   - Se estiver prestes a expirar, usa refresh_token para gerar novo.  
+   - Se não existir, gera novo token usando credenciais do app (CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN).
+
+3. **auth → Token Podio**  
+   - Autentica a aplicação no Podio utilizando o token obtido do cache ou gerado.  
+   - Garante que todas as chamadas subsequentes usem um token válido.
+
+4. **buscar → REST + GraphQL**  
+   - Realiza consultas externas, como:
+     - Podio (REST): buscar por nome, e-mail, telefone, deduplicação.
+     - EXPA / AIESEC (GraphQL): consulta de comitês, normalização de nomes, resolução de IDs internacionais.
+
+5. **leads → EXPA + Podio**  
+   - Criação ou atualização de leads nos sistemas externos com validação de dados.
+
+6. **utils → respostaJson**  
+   - Padroniza a resposta da API para o cliente.  
+   - Funções puras sem dependência de APIs externas.
 
 ---
 
