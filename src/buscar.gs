@@ -1,35 +1,56 @@
-function buscarPorTelefone(access_token, APP_ID, telefone) {
-  const url = `https://api.podio.com/item/app/${APP_ID}/`;
+function buscarItemCompleto(access_token, APP_ID, data) {
+  const nome = data.nome;
+  const sobrenome = data.sobrenome;
+  const emails = data.emails.map(e => e.email);
+  const telefones = data.telefones.map(t => t.numero);
 
-  // Faz a requisi??o GET para listar itens do app
-  const response = UrlFetchApp.fetch(url, {
-    method: "get",
-    headers: {
-      "Authorization": `Bearer ${access_token}`
-    },
-    muteHttpExceptions: true
+  let resultados = [];
+
+  // 1 ? Busca por nome
+  resultados = resultados.concat(buscarPorNome(access_token, APP_ID, nome));
+  resultados = resultados.concat(buscarPorSobreNome(access_token, APP_ID, sobrenome));
+
+  // 2 ? Busca por cada email
+  emails.forEach(e => {
+    resultados = resultados.concat(buscarPorEmail(access_token, APP_ID, e));
   });
 
-  try {
-    const data = JSON.parse(response.getContentText());
-    const itens = data.items || [];
+  // 3 ? Busca por cada telefone
+  telefones.forEach(t => {
+    resultados = resultados.concat(buscarPorTelefone(access_token, APP_ID, t));
+  });
 
-    // Filtra os itens que possuem o telefone informado
-    const encontrados = itens.filter(item => {
-      if (!item.fields) return false;
+  // 4 ? Remove duplicados pelo item_id
+  resultados = resultados.filter(
+    (item, index, arr) => arr.findIndex(i => i.item_id === item.item_id) === index
+  );
 
-      // Verifica cada campo do item
-      return item.fields.some(field => {
-        if (field.type === "phone" && field.values) {
-          return field.values.some(f => f.value === telefone);
-        }
-        return false;
-      });
-    });
+  // 5 ? Valida??o detalhada dos dados encontrados
+  for (let item of resultados) {
+    if (!item || !item.fields) continue;
 
-    return encontrados;
+    const tituloField = getField(item, "title"); // campo do nome
+    const sobrenomeField = getField(item, "sobrenome-2"); // campo do sobrenome
+    const emailField = getField(item, "email"); // campo de emails
+    const telefoneField = getField(item, "telefone"); // campo de telefones
 
-  } catch (e) {
-    throw new Error("Erro ao buscar por telefone: " + response.getContentText());
+    const titulo = tituloField?.values?.[0]?.value || "";
+    const sobrenomeTitle = sobrenomeField?.values?.[0]?.value || "";
+
+    const itemEmails = (emailField?.values || []).map(v => v.value);
+    const itemTelefones = (telefoneField?.values || []).map(v => v.value);
+
+    const emailMatch = emails.some(e => itemEmails.includes(e));
+    const telefoneMatch = telefones.some(t => itemTelefones.includes(t));
+    const nomeMatch = titulo === nome;
+    const sobrenomeMatch = sobrenomeTitle === sobrenome;
+
+    // Se pelo menos email ou telefone bate e nome + sobrenome batem ? retorna item
+    if ((emailMatch || telefoneMatch) && nomeMatch && sobrenomeMatch) {
+      return item;
+    }
   }
+
+  // Nenhum item corresponde aos dados
+  return null;
 }
