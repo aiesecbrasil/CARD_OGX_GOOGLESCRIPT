@@ -1,7 +1,5 @@
 function adicionarLeadOGX(access_token, APP_ID,tokenAcesso, data,email,telefone) {
-  
   const idExpa = leadsExpa(tokenAcesso,data,email,telefone);
-  Logger.log(idExpa)
   const url = `https://api.podio.com/item/app/${APP_ID}/`;
   const headers = {
     "Authorization": `Bearer ${access_token}`,
@@ -132,7 +130,6 @@ function leadsExpa(tokenAcesso, dados,email,telefone) {
 
   try {
     const response = UrlFetchApp.fetch(url, options);
-    Logger.log(response)
     const responseText = response.getContentText();
 
     // Verifica se a resposta não é HTML inesperado
