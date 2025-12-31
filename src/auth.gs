@@ -1,18 +1,18 @@
 function getAccessToken(CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN) {
-  // URL do endpoint de autentica??o do Podio
+  // URL do endpoint de autenticação do Podio
   const authUrl = "https://podio.com/oauth/token";
 
-  // Payload que ser? enviado na requisi??o POST
-  // Cont?m tipo de grant e credenciais da aplica??o
+  // Payload que será enviado na requisição POST
+  // Contém tipo de grant e credenciais da aplicação
   const payload = {
-    grant_type: "app",          // Tipo de autentica??o (App)
+    grant_type: "app",          // Tipo de autenticação (App)
     client_id: CLIENT_ID,       // ID do cliente fornecido pelo Podio
     client_secret: CLIENT_SECRET, // Segredo do cliente
     app_id: APP_ID,             // ID do App no Podio
     app_token: APP_TOKEN        // Token do App
   };
 
-  // Faz a requisi??o POST para o Podio com o payload
+  // Faz a requisição POST para o Podio com o payload
   // muteHttpExceptions: true permite tratar erros manualmente
   const response = UrlFetchApp.fetch(authUrl, {
     method: "POST",
@@ -20,23 +20,23 @@ function getAccessToken(CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN) {
     muteHttpExceptions: true
   });
 
-  // Obt?m o conte?do da resposta como string
+  // Obtém o conteúdo da resposta como string
   const content = response.getContentText();
   let json;
 
   // Tenta converter a resposta em JSON
-  // Se a resposta n?o for JSON v?lido, lan?a erro
+  // Se a resposta não for JSON válido, lança erro
   try {
     json = JSON.parse(content);
   } catch (e) {
-    throw new Error("Resposta inv?lida ao gerar token (n?o ? JSON): " + content);
+    throw new Error("Resposta inválida ao gerar token (não é JSON): " + content);
   }
 
   // Verifica se o JSON retornou o access_token
   if (!json.access_token) {
-    throw new Error("N?o foi poss?vel gerar o token: " + content);
+    throw new Error("Não foi possível gerar o token: " + content);
   }
 
-  // Retorna o token de acesso v?lido
+  // Retorna o token de acesso válido
   return json.access_token;
 }
