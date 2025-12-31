@@ -10,7 +10,7 @@ O sistema atua como o **back-end responsável pela etapa final de execução e p
 Do ponto de vista técnico, a aplicação:
 - Recebe leads via **endpoint HTTP**
 - Realiza **validações e deduplicações** no Podio
-- Cria ou atualiza registros no **EXPA**
+- Cria registros no **EXPA**
 - Sincroniza dados no **Podio**
 - Mantém o **código versionado automaticamente no GitHub**, assegurando rastreabilidade e governança técnica
 
