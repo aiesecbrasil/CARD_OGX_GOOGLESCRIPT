@@ -38,5 +38,5 @@ function getAccessToken(CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN) {
   }
 
   // Retorna o token de acesso válido
-  return json.access_token;
+  return json;
 }
