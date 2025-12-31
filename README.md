@@ -171,48 +171,36 @@ Ponto de entrada da aplicação (endpoint).
 ## 📄 github.gs
 
 ### Responsabilidade
-Integração com a API do GitHub.
+- Integração com a API do GitHub.
+- Realizar o push automático do projeto para o GitHub.
 
 ### Contém
 - Comunicação com GitHub Contents API
-
-### Funções
-- githubPushFile(path, content, message)
-
-### Regras
-- ❌ Não acessar variáveis sensíveis diretamente  
-- ✅ Usar apenas dados do env.gs
-
----
-
-## 📄 push.gs
-
-### Responsabilidade
-Realizar o push automático do projeto para o GitHub.
-
-### Contém
 - Leitura dos arquivos do Apps Script
 - Filtro de arquivos sensíveis
 - Commit automático
 
 ### Funções
+- githubPushFile(path, content, message)
 - pushProjetoParaGithub()
 
 ### Regras
+- ❌ Não acessar variáveis sensíveis diretamente  
+- ✅ Usar apenas dados do env.gs
 - ❌ Ignorar env, testes e arquivos locais  
 - ✅ Versionar apenas código válido  
+
 
 ---
 
 ## 🔄 Fluxo Geral
 
-text
-doPost
-  ↓
-auth → token Podio
-  ↓
-buscar → REST + GraphQL
-  ↓
-leads → EXPA + Podio
-  ↓
-utils → respostaJson
+doPost  
+  ↓  
+auth → token Podio  
+  ↓  
+buscar → REST + GraphQL  
+  ↓  
+leads → EXPA + Podio  
+  ↓  
+utils → respostaJson  
