@@ -133,6 +133,48 @@ Centralizar **todas as consultas externas**.
 - ❌ Não criar ou atualizar dados  
 - ✅ Apenas leitura / consulta  
 
+## 📄 cache.gs
+
+### Responsabilidade
+Gerenciamento de access_token para APIs externas (Podio/EXPA) utilizando cache, renovação automática e refresh_token.  
+Evita múltiplas requisições desnecessárias e mantém tokens válidos sempre que possível.
+
+### Contém
+- Busca de token no cache (buscaAcessToken)  
+- Salvamento de token no cache (salvarToken)  
+- Renovação automática via refresh_token (refreshAccessToken)  
+- Função de alto nível para obter token válido (getAccessTokenCached)  
+
+### Funções e Parâmetros
+
+- buscaAcessToken(chave)  
+  - Parâmetros: chave (string) — chave do cache  
+  - Retorno: string|null — token válido ou null  
+  - Descrição: Busca no cache e renova se estiver prestes a expirar.
+
+- salvarToken(jsonAccessToken)  
+  - Parâmetros: jsonAccessToken (Object) — { access_token, refresh_token, expires_in }  
+  - Retorno: string — token válido  
+  - Descrição: Salva token no cache com expiração, máximo 6h.
+
+- refreshAccessToken(refreshToken)  
+  - Parâmetros: refreshToken (string) — token para gerar novo access_token  
+  - Retorno: Object — { access_token, refresh_token, expires_in }  
+  - Descrição: Renova token usando refresh_token via API OAuth.
+
+- getAccessTokenCached()  
+  - Parâmetros: nenhum  
+  - Retorno: string — token válido  
+  - Descrição: Retorna sempre um token válido, usando cache ou renovando.
+
+### Regras
+- ✅ Sempre armazenar tokens válidos antes de retornar  
+- ✅ Renovar automaticamente se estiver prestes a expirar  
+- ✅ Limitar tempo de cache ao máximo permitido pelo Apps Script (6h)  
+- ❌ Nunca retornar token expirado  
+- ❌ Nunca armazenar dados sensíveis fora do cache temporário  
+- ❌ Não usar cache como fonte de verdade — apenas otimizaç
+
 ---
 
 ## 📄 leads.gs
@@ -152,7 +194,7 @@ Escrita de dados nos sistemas externos.
 
 ### Regras
 - ✅ Validar dados antes do envio  
-- ❌ Nunca enviar valores inválidos (0, null, string errada)  
+- ❌ Nunca enviar valores inválidos (0, null, string errada) 
 
 ---
 
