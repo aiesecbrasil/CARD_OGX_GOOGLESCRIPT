@@ -1,35 +1,35 @@
 function getREADME() {
-  return `# OGX ? Podio ? EXPA ? GitHub  
-**Integra??o de Leads ? Google Apps Script**
+  return `# OGX · Podio · EXPA · GitHub  
+**Integração de Leads – Google Apps Script**
 
-Este projeto implementa uma integra??o completa entre **OGX**, **Podio** e **EXPA (AIESEC)** utilizando **Google Apps Script**, com **versionamento autom?tico no GitHub**.
+Este projeto implementa uma integração completa entre **OGX**, **Podio** e **EXPA (AIESEC)** utilizando **Google Apps Script**, com **versionamento automático no GitHub**.
 
-A arquitetura foi desenhada para **produ??o**, com separa??o clara de responsabilidades, baixo acoplamento e facilidade de manuten??o.
-
----
-
-## ? Vis?o Geral
-
-- ? Recebe leads via **HTTP POST**
-- ? Verifica duplicidade no **Podio**
-- ? Cria pessoa no **EXPA**
-- ?? Cria ou atualiza item no **Podio**
-- ? Versiona automaticamente o c?digo no **GitHub**
+A arquitetura foi desenhada para **produção**, com separação clara de responsabilidades, baixo acoplamento e facilidade de manutenção.
 
 ---
 
-## ? Arquitetura do Projeto
+## 📌 Visão Geral
+
+- 📥 Recebe leads via **HTTP POST**
+- 🔍 Verifica duplicidade no **Podio**
+- 🌐 Cria pessoa no **EXPA**
+- 🗂️ Cria ou atualiza item no **Podio**
+- 📤 Versiona automaticamente o código no **GitHub**
+
+---
+
+## 🧱 Arquitetura do Projeto
 
 Escopo fechado **apenas** para os arquivos listados abaixo.
 
 ---
 
-## ? env.gs
+## 📄 env.gs
 
 ### Responsabilidade
-Gerenciar vari?veis de ambiente do projeto.
+Gerenciar variáveis de ambiente do projeto.
 
-### Cont?m
+### Contém
 **Podio**
 - CLIENT_ID  
 - CLIENT_SECRET  
@@ -45,73 +45,73 @@ Gerenciar vari?veis de ambiente do projeto.
 - GITHUB_REPO  
 - GITHUB_BRANCH  
 
-### Fun??es
-- Env() ? grava vari?veis no Script Properties  
-- getEnv() ? retorna as vari?veis de ambiente  
+### Funções
+- Env() → grava variáveis no Script Properties  
+- getEnv() → retorna as variáveis de ambiente  
 
 ### Regras
-- ? N?o conter l?gica de neg?cio  
-- ? N?o realizar chamadas HTTP  
-- ? N?o versionar no GitHub  
+- ❌ Não conter lógica de negócio  
+- ❌ Não realizar chamadas HTTP  
+- ❌ Não versionar no GitHub  
 
 ---
 
-## ? auth.gs
+## 📄 auth.gs
 
 ### Responsabilidade
-Autentica??o com servi?os externos.
+Autenticação com serviços externos.
 
-### Cont?m
+### Contém
 - OAuth do Podio
 
-### Fun??es
+### Funções
 - getAccessToken(clientId, clientSecret, appId, appToken)
 
 ### Regras
-- ? N?o criar ou atualizar dados  
-- ? Apenas autentica??o  
+- ❌ Não criar ou atualizar dados  
+- ✅ Apenas autenticação  
 
 ---
 
-## ? utils.gs
+## 📄 utils.gs
 
 ### Responsabilidade
-Fun??es utilit?rias reutiliz?veis.
+Funções utilitárias reutilizáveis.
 
-### Cont?m
-- Padroniza??o de respostas
-- Manipula??o segura de objetos
+### Contém
+- Padronização de respostas
+- Manipulação segura de objetos
 
-### Fun??es
+### Funções
 - respostaJson(status, message, data)
 - getField(item, fieldName)
 
 ### Regras
-- ? Fun??es puras  
-- ? Sem depend?ncia direta de APIs externas  
+- ✅ Funções puras  
+- ❌ Sem dependência direta de APIs externas  
 
 ---
 
-## ? buscar.gs
+## 📄 buscar.gs
 
 ### Responsabilidade
 Centralizar **todas as consultas externas**.
 
-### Cont?m
+### Contém
 
-#### ? Podio (REST)
+#### ▶ Podio (REST)
 - Buscar por nome
 - Buscar por sobrenome
 - Buscar por e-mail
 - Buscar por telefone
-- Busca combinada e deduplica??o
+- Busca combinada e deduplicação
 
-#### ? EXPA / AIESEC (GraphQL)
-- Consulta de comit?s (LC)
-- Normaliza??o de nomes (ex: remover "AIESEC in")
-- Resolu??o de IDs internacionais
+#### ▶ EXPA / AIESEC (GraphQL)
+- Consulta de comitês (LC)
+- Normalização de nomes (ex: remover "AIESEC in")
+- Resolução de IDs internacionais
 
-### Fun??es
+### Funções
 - buscarPorNome(accessToken, appId, nome)
 - buscarPorSobreNome(accessToken, appId, sobrenome)
 - buscarPorEmail(accessToken, appId, email)
@@ -120,38 +120,38 @@ Centralizar **todas as consultas externas**.
 - obterIdsComites(tokenExpa, nomeCL)
 
 ### Regras
-- ? N?o criar ou atualizar dados  
-- ? Apenas leitura / consulta  
+- ❌ Não criar ou atualizar dados  
+- ✅ Apenas leitura / consulta  
 
 ---
 
-## ? leads.gs
+## 📄 leads.gs
 
 ### Responsabilidade
 Escrita de dados nos sistemas externos.
 
-### Cont?m
-- Cria??o de lead no EXPA
-- Cria??o de lead no Podio
-- Atualiza??o de lead existente
+### Contém
+- Criação de lead no EXPA
+- Criação de lead no Podio
+- Atualização de lead existente
 
-### Fun??es
+### Funções
 - leadsExpa(tokenExpa, dados, email, telefone)
 - adicionarLeadOGX(accessToken, appId, tokenExpa, dados, email, telefone)
 - atualizarLead(accessToken, itemExistente, dados)
 
 ### Regras
-- ? Validar dados antes do envio  
-- ? Nunca enviar valores inv?lidos (0, null, string errada)  
+- ✅ Validar dados antes do envio  
+- ❌ Nunca enviar valores inválidos (0, null, string errada)  
 
 ---
 
-## ? doPost.gs
+## 📄 doPost.gs
 
 ### Responsabilidade
-Ponto de entrada da aplica??o (endpoint).
+Ponto de entrada da aplicação (endpoint).
 
-### Cont?m
+### Contém
 - doPost(e)
 - executarComJSON()
 
@@ -164,58 +164,58 @@ Ponto de entrada da aplica??o (endpoint).
 6. Retorna resposta JSON  
 
 ### Regras
-- ? N?o conter regras de integra??o  
-- ? N?o conter regras de autentica??o  
+- ❌ Não conter regras de integração  
+- ❌ Não conter regras de autenticação  
 
 ---
 
-## ? github.gs
+## 📄 github.gs
 
 ### Responsabilidade
-Integra??o com a API do GitHub.
+Integração com a API do GitHub.
 
-### Cont?m
-- Comunica??o com GitHub Contents API
+### Contém
+- Comunicação com GitHub Contents API
 
-### Fun??es
+### Funções
 - githubPushFile(path, content, message)
 
 ### Regras
-- ? N?o acessar vari?veis sens?veis diretamente  
-- ? Usar apenas dados do env.gs
+- ❌ Não acessar variáveis sensíveis diretamente  
+- ✅ Usar apenas dados do env.gs
 
 ---
 
-## ? push.gs
+## 📄 push.gs
 
 ### Responsabilidade
-Realizar o push autom?tico do projeto para o GitHub.
+Realizar o push automático do projeto para o GitHub.
 
-### Cont?m
+### Contém
 - Leitura dos arquivos do Apps Script
-- Filtro de arquivos sens?veis
-- Commit autom?tico
+- Filtro de arquivos sensíveis
+- Commit automático
 
-### Fun??es
+### Funções
 - pushProjetoParaGithub()
 
 ### Regras
-- ? Ignorar env, testes e arquivos locais  
-- ? Versionar apenas c?digo v?lido  
+- ❌ Ignorar env, testes e arquivos locais  
+- ✅ Versionar apenas código válido  
 
 ---
 
-## ? Fluxo Geral
+## 🔄 Fluxo Geral
 
 text
 doPost
-  ?
-auth ? token Podio
-  ?
-buscar ? REST + GraphQL
-  ?
-leads ? EXPA + Podio
-  ?
-utils ? respostaJson
+  ↓
+auth → token Podio
+  ↓
+buscar → REST + GraphQL
+  ↓
+leads → EXPA + Podio
+  ↓
+utils → respostaJson
 `
 }
