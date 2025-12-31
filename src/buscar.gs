@@ -1,42 +1,29 @@
-function obterIdsComites(tokenAcesso,termoBusca) {
-  const url = "https://gis-api.aiesec.org/graphql"; // Substitua pelo endpoint real
-  if (termoBusca !== "AIESEC no Brasil") {
-    // Remove "AIESEC in " do início do termo de busca
-    const termoLimpo = termoBusca.replace(/^AIESEC em /i, "").trim();
-    // Monta a query GraphQL
-    const queryGraphQLComiteLocal = `
-    query {
-      committees(filters: { parent: [1606], q: "${termoLimpo}" }) {
-        data {
-          id
-        }
-      }
-    }
-  `;
+function buscarPorNome(access_token, APP_ID, nome) {
+  // Endpoint de filtro do Podio para itens do app
+  const url = `https://api.podio.com/item/app/${APP_ID}/filter/`;
 
-    const payload = JSON.stringify({ query: queryGraphQLComiteLocal });
+  // Payload para filtrar itens pelo campo "title"
+  const payload = {
+    filters: { "title": nome }, // filtro pelo título
+    limit: 1                   // retorna no máximo 1 item
+  };
 
-    const opcoes = {
-      method: "POST",
-      contentType: "application/json",
-      headers: {
-        "Authorization": tokenAcesso
-      },
-      payload: payload,
-      muteHttpExceptions: true
-    };
+  // Requisição POST para o Podio
+  const response = UrlFetchApp.fetch(url, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${access_token}`, // token de autenticação
+      "Content-Type": "application/json"        // tipo de conteúdo
+    },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true // permite tratar manualmente erros HTTP
+  });
 
-    try {
-      const resposta = UrlFetchApp.fetch(url, opcoes);
-      const json = JSON.parse(resposta.getContentText());
-
-      // Retorna apenas os IDs dos comitês encontrados
-      return json.data.committees.data.map(c => c.id)[0];
-
-    } catch (erro) {
-      Logger.log("Erro na consulta GraphQL: " + erro);
-      return [];
-    }
+  // Converte a resposta em JSON
+  try {
+    const data = JSON.parse(response.getContentText());
+    return data.items || []; // retorna os itens encontrados ou array vazio
+  } catch (e) {
+    throw new Error("Erro ao buscar por nome: " + response.getContentText());
   }
-  return 1606;
 }
