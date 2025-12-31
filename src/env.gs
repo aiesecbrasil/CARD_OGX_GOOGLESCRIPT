@@ -11,7 +11,7 @@ function getEnv() {
   const GITHUB_BRANCH = scriptProperties.getProperty('GITHUB_BRANCH');
 
   if (!CLIENT_ID || !CLIENT_SECRET || !APP_ID || !APP_TOKEN) {
-    throw new Error("As vari?veis de ambiente n?o est?o definidas. Rode Env() ou configure manualmente.");
+    throw new Error("As variáveis de ambiente não estão definidas. Rode Env() ou configure manualmente.");
   }
 
   return { CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN ,TOKEN_EXPA,GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO,
