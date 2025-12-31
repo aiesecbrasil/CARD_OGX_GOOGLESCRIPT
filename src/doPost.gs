@@ -4,40 +4,40 @@ function doPost(e) {
   try {
     // 1. Parse do body recebido
     if (!e || !e.postData || !e.postData.contents) {
-      throw new Error("Nenhum dado enviado no corpo da requisi??o.");
+      throw new Error("Nenhum dado enviado no corpo da requisição.");
     }
     
     const dados = JSON.parse(e.postData.contents);
   
-    // 2. Recupera vari?veis de ambiente
+    // 2. Recupera variáveis de ambiente
     const { CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN, TOKEN_EXPA } = getEnv();
 
     // 3. Gera token de acesso do Podio
     const accessToken = getAccessToken(CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN);
     
-    // 4. Verifica se j? existe um item correspondente
+    // 4. Verifica se já existe um item correspondente
     const itemExistente = buscarItemCompleto(accessToken, APP_ID, dados);
     
-    // 5. Monta listas para valida??o de duplicidade
+    // 5. Monta listas para validação de duplicidade
     const listaEmails = dados.emails.map(e => e.email);
     const listaTelefones = dados.telefones.map(t => t.numero);
     
-    // 6. Se item j? existe ? atualiza
+    // 6. Se item já existe → atualiza
     if (itemExistente) {
       const idAtualizado = atualizarLead(accessToken, itemExistente, dados);
       return respostaJson("sucesso", "Lead de OGX atualizado com sucesso.", idAtualizado);
     }
-    // 7. Verifica??o de duplicidade por email
+    // 7. Verificação de duplicidade por email
     for (const email of listaEmails) {
       if (buscarPorEmail(accessToken, APP_ID, email).length > 0) {
-        throw new Error("J? existe cadastro com esse(s) email(s).");
+        throw new Error("Já existe cadastro com esse(s) email(s).");
       }
     }
   
-    // 8. Verifica??o de duplicidade por telefone
+    // 8. Verificação de duplicidade por telefone
     for (const telefone of listaTelefones) {
       if (buscarPorTelefone(accessToken, APP_ID, telefone).length > 0) {
-        throw new Error("J? existe cadastro com esse(s) telefone(s).");
+        throw new Error("Já existe cadastro com esse(s) telefone(s).");
       }
     }
     
