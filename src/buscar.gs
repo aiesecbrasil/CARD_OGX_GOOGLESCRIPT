@@ -1,7 +1,7 @@
-function buscarPorSobreNome(access_token, APP_ID, sobrenome) {
+function buscarPorEmail(access_token, APP_ID, email) {
   const url = `https://api.podio.com/item/app/${APP_ID}/filter/`;
   const payload = {
-    filters: { "sobrenome-2": sobrenome },
+    filters: { "email": [email] }, // filtro por e-mail (campo m?ltiplo)
     limit: 1
   };
 
@@ -19,6 +19,6 @@ function buscarPorSobreNome(access_token, APP_ID, sobrenome) {
     const data = JSON.parse(response.getContentText());
     return data.items || [];
   } catch (e) {
-    throw new Error("Erro ao buscar por sobrenome: " + response.getContentText());
+    throw new Error("Erro ao buscar por email: " + response.getContentText());
   }
 }
