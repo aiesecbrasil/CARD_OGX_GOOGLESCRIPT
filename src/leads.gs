@@ -1,4 +1,4 @@
-class Lead {
+class Leads {
   /**
    * @param {Object} dados - Objeto com os dados do lead
    * @param {string} dados.nome
@@ -16,7 +16,7 @@ class Lead {
    * @param {string} dados.programa
    * @param {string} dados.nomeCL
    */
-  constructor(dados,access_token,APP_ID,TOKEN_EXPA) {
+  constructor(dados, access_token, APP_ID, TOKEN_EXPA) {
     Object.assign(this, dados);
     this.access_token = access_token;
     this.APP_ID = APP_ID;
@@ -30,9 +30,9 @@ class Lead {
    * @param {string} tokenAcesso - token EXPA
    * @returns {Object} Resposta do Podio
    */
-  criarNoPodio(email,telefone) {
-    const reposta = new Resposta();
-    const idExpa = this.criarNoExpa(email,telefone);
+  criarNoPodio(email, telefone) {
+    const resposta = new Resposta();
+    const idExpa = this.criarNoExpa(email, telefone);
     const url = `https://api.podio.com/item/app/${this.APP_ID}/`;
     const headers = {
       "Authorization": `Bearer ${this.access_token}`,
@@ -52,11 +52,13 @@ class Lead {
         "tag-origem-2": this.idCategoria,
         "eu-concordo-com-a-coleta-e-uso-dos-meus-dados-conforme-": this.idAutorizacao
       },
-      tags: Array.isArray(this.tag) ? this.tag : (this.tag ? [this.tag] : [])
+      tags: []
     };
 
     if (this.idAnuncio) cardOGX.fields["tag-meio-2-2"] = this.idAnuncio;
-
+    if (this.tag) { // se for string vira array; se for array, usa direto 
+      cardOGX.tags = Array.isArray(this.tag) ? this.tag : [this.tag];
+    }
     const response = UrlFetchApp.fetch(url, {
       method: "POST",
       contentType: "application/json",
@@ -64,10 +66,10 @@ class Lead {
       payload: JSON.stringify(cardOGX),
       muteHttpExceptions: true
     });
-
+    
     try {
       const novoLead = JSON.parse(response.getContentText());
-      return reposta.successo("sucesso", "Lead de OGX criado com sucesso.", novoLead); 
+      return resposta.sucesso("sucesso", "Lead de OGX criado com sucesso.", novoLead);
     } catch (e) {
       throw new Error("Resposta inválida (não é JSON): " + response.getContentText());
     }
@@ -80,6 +82,7 @@ class Lead {
    * @returns {Object} item atualizado
    */
   atualizarNoPodio(item) {
+    const resposta = new Resposta();
     const itemID = item.item_id;
     const url = `https://api.podio.com/item/${itemID}`;
     const headers = {
@@ -108,9 +111,9 @@ class Lead {
       payload: JSON.stringify(payload),
       muteHttpExceptions: true
     });
-    
-    const idAtualizado =  item.app_item_id;
-    return reposta.successo("sucesso", "Lead de OGX criado com sucesso.", idAtualizado);
+
+    const idAtualizado = item.app_item_id;
+    return resposta.sucesso("sucesso", "Lead de OGX criado com sucesso.", idAtualizado);
   }
 
   /**
@@ -118,9 +121,9 @@ class Lead {
    * @param {string} tokenAcesso
    * @returns {string} person_id
    */
-  criarNoExpa(email,telefone) {
+  criarNoExpa(email, telefone) {
     const url = 'https://auth.aiesec.org/users.json';
-    const idIntenacionalCL = Lead.obterIdsComites(tokenAcesso, this.nomeCL);
+    const idIntenacionalCL = this.obterIdsComites(this.nomeCL);
 
     const payload = {
       user: {
