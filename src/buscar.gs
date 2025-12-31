@@ -27,7 +27,8 @@ function buscarPorNome(access_token, APP_ID, nome) {
     throw new Error("Erro ao buscar por nome: " + response.getContentText());
   }
 }
-      function buscarPorSobreNome(access_token, APP_ID, sobrenome) {
+
+function buscarPorSobreNome(access_token, APP_ID, sobrenome) {
   const url = `https://api.podio.com/item/app/${APP_ID}/filter/`;
   const payload = {
     filters: { "sobrenome-2": sobrenome },
@@ -51,7 +52,8 @@ function buscarPorNome(access_token, APP_ID, nome) {
     throw new Error("Erro ao buscar por sobrenome: " + response.getContentText());
   }
 }
-      function buscarPorEmail(access_token, APP_ID, email) {
+
+function buscarPorEmail(access_token, APP_ID, email) {
   const url = `https://api.podio.com/item/app/${APP_ID}/filter/`;
   const payload = {
     filters: { "email": [email] }, // filtro por e-mail (campo múltiplo)
@@ -75,7 +77,7 @@ function buscarPorNome(access_token, APP_ID, nome) {
     throw new Error("Erro ao buscar por email: " + response.getContentText());
   }
 }
-      function buscarPorTelefone(access_token, APP_ID, telefone) {
+function buscarPorTelefone(access_token, APP_ID, telefone) {
   const url = `https://api.podio.com/item/app/${APP_ID}/`;
 
   // Faz a requisição GET para listar itens do app
@@ -110,7 +112,8 @@ function buscarPorNome(access_token, APP_ID, nome) {
     throw new Error("Erro ao buscar por telefone: " + response.getContentText());
   }
 }
-      function buscarItemCompleto(access_token, APP_ID, data) {
+
+function buscarItemCompleto(access_token, APP_ID, data) {
   const nome = data.nome;
   const sobrenome = data.sobrenome;
   const emails = data.emails.map(e => e.email);
@@ -166,7 +169,8 @@ function buscarPorNome(access_token, APP_ID, nome) {
   // Nenhum item corresponde aos dados
   return null;
 }
-      function obterIdsComites(tokenAcesso,termoBusca) {
+
+function obterIdsComites(tokenAcesso,termoBusca) {
   const url = "https://gis-api.aiesec.org/graphql"; // Substitua pelo endpoint real
   if (termoBusca !== "AIESEC no Brasil") {
     // Remove "AIESEC in " do início do termo de busca
