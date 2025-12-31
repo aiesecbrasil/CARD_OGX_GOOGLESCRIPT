@@ -1,5 +1,4 @@
-function getREADME() {
-  return `# OGX · Podio · EXPA · GitHub  
+# OGX · Podio · EXPA · GitHub  
 **Integração de Leads – Google Apps Script**
 
 Este projeto implementa uma integração completa entre **OGX**, **Podio** e **EXPA (AIESEC)** utilizando **Google Apps Script**, com **versionamento automático no GitHub**.
@@ -217,5 +216,3 @@ buscar → REST + GraphQL
 leads → EXPA + Podio
   ↓
 utils → respostaJson
-`
-}
