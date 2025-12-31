@@ -53,7 +53,7 @@ function adicionarLeadOGX(access_token, APP_ID,tokenAcesso, data,email,telefone)
     throw new Error("Resposta inválida (não é JSON): " + response.getContentText());
   }
 }
-function atualizarLead(access_token, item, data) {
+      function atualizarLead(access_token, item, data) {
 
   const itemID = item.item_id;
   const url = `https://api.podio.com/item/${itemID}`;
@@ -95,7 +95,7 @@ function atualizarLead(access_token, item, data) {
 
   return item.app_item_id;
 }
-function leadsExpa(tokenAcesso, dados,email,telefone) {
+      function leadsExpa(tokenAcesso, dados,email,telefone) {
   
   const url = 'https://auth.aiesec.org/users.json';
   const idIntenacionalCL = obterIdsComites(tokenAcesso,dados.nomeCL)
