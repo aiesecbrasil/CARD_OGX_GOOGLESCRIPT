@@ -8,7 +8,7 @@ function buscaAcessToken(chave) {
   const agora = new Date().getTime();
 
   // Se expirar em até 5 minutos, renova
-  if (agora >= data.expiracao - 5 * 60 * 1000) {
+  if (agora >= (data.expiracao - 5 * 60 * 1000)) {
     const novoToken = refreshAccessToken(data.refresh_token);
     return salvarToken(novoToken); // salva e retorna o novo token
   }
