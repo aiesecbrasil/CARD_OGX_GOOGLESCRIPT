@@ -36,13 +36,14 @@ class Auth {
   _buscaCache() {
     const tokenCache = this.cache.get(this.chave);
     if (!tokenCache) return null;
-
+    Logger.log(tokenCache)
     const data = JSON.parse(tokenCache);
     const agora = new Date().getTime();
 
     if (agora >= (data.expiracao - 5 * 60 * 1000)) {
       const novoToken = this._refreshToken(data.refresh_token);
-      return this._salvarCache(novoToken);
+      Logger.log(novoToken)
+      return this._salvarCache(novoToken).token;
     }
 
     return data.access_token;
