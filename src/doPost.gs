@@ -10,10 +10,10 @@ function doPost(e) {
     const dados = JSON.parse(e.postData.contents);
   
     // 2. Recupera variáveis de ambiente
-    const { CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN, TOKEN_EXPA } = getEnv();
+    const {APP_ID, TOKEN_EXPA } = getEnv();
 
     // 3. Gera token de acesso do Podio
-    const accessToken = getAccessToken(CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN);
+    const accessToken = getAccessTokenCached();
     
     // 4. Verifica se já existe um item correspondente
     const itemExistente = buscarItemCompleto(accessToken, APP_ID, dados);
