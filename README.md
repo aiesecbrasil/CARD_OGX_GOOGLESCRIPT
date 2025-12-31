@@ -133,6 +133,7 @@ Centralizar **todas as consultas externas**.
 - ❌ Não criar ou atualizar dados  
 - ✅ Apenas leitura / consulta  
 
+----
 ## 📄 cache.gs
 
 ### Responsabilidade
