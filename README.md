@@ -257,4 +257,9 @@ buscar → REST + GraphQL
   ↓  
 leads → EXPA + Podio  
   ↓  
-utils → respostaJson  
+utils → respostaJson 
+
+---
+
+## 👨‍💻 Autor  
+- [Caio Marinho](https://github.com/Caio-Marinho)
