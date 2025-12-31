@@ -1,29 +1,24 @@
-function buscarPorNome(access_token, APP_ID, nome) {
-  // Endpoint de filtro do Podio para itens do app
+function buscarPorSobreNome(access_token, APP_ID, sobrenome) {
   const url = `https://api.podio.com/item/app/${APP_ID}/filter/`;
-
-  // Payload para filtrar itens pelo campo "title"
   const payload = {
-    filters: { "title": nome }, // filtro pelo t?tulo
-    limit: 1                   // retorna no m?ximo 1 item
+    filters: { "sobrenome-2": sobrenome },
+    limit: 1
   };
 
-  // Requisi??o POST para o Podio
   const response = UrlFetchApp.fetch(url, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${access_token}`, // token de autentica??o
-      "Content-Type": "application/json"        // tipo de conte?do
+      "Authorization": `Bearer ${access_token}`,
+      "Content-Type": "application/json"
     },
     payload: JSON.stringify(payload),
-    muteHttpExceptions: true // permite tratar manualmente erros HTTP
+    muteHttpExceptions: true
   });
 
-  // Converte a resposta em JSON
   try {
     const data = JSON.parse(response.getContentText());
-    return data.items || []; // retorna os itens encontrados ou array vazio
+    return data.items || [];
   } catch (e) {
-    throw new Error("Erro ao buscar por nome: " + response.getContentText());
+    throw new Error("Erro ao buscar por sobrenome: " + response.getContentText());
   }
 }
