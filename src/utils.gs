@@ -11,7 +11,7 @@ function respostaJson(status, message, data) {
     .createTextOutput(JSON.stringify(resposta))
     .setMimeType(ContentService.MimeType.JSON);
 }
-function getField(item, fieldName) {
+      function getField(item, fieldName) {
   // Validação inicial para garantir que o objeto é válido
   if (!item || !item.fields || !Array.isArray(item.fields)) return null;
 
