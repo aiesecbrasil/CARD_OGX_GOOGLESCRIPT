@@ -1,9 +1,20 @@
 # OGX · Podio · EXPA · GitHub  
 **Integração de Leads – Google Apps Script**
 
-Este projeto implementa uma integração completa entre **OGX**, **Podio** e **EXPA (AIESEC)** utilizando **Google Apps Script**, com **versionamento automático no GitHub**.
+Este projeto implementa uma **solução institucional de integração de leads** entre os sistemas **OGX**, **Podio** e **EXPA (AIESEC)**, utilizando **Google Apps Script** como camada de orquestração e automação, com **versionamento contínuo no GitHub**.
 
-A arquitetura foi desenhada para **produção**, com separação clara de responsabilidades, baixo acoplamento e facilidade de manutenção.
+A arquitetura foi projetada com foco em **ambiente de produção**, adotando boas práticas de **engenharia de software**, como **separação de responsabilidades**, **baixo acoplamento**, **controle de dependências** e **facilidade de manutenção e evolução**.
+
+O sistema atua como o **back-end responsável pela etapa final de execução e processamento dos cadastros de leads**, garantindo a **consistência dos dados**, **validação de duplicidade**, **integração segura entre plataformas** e a **padronização do fluxo de informações** utilizado no **processo de intercâmbio da AIESEC**.
+
+Do ponto de vista técnico, a aplicação:
+- Recebe leads via **endpoint HTTP**
+- Realiza **validações e deduplicações** no Podio
+- Cria ou atualiza registros no **EXPA**
+- Sincroniza dados no **Podio**
+- Mantém o **código versionado automaticamente no GitHub**, assegurando rastreabilidade e governança técnica
+
+Esta solução contribui diretamente para a **eficiência operacional**, **confiabilidade dos dados** e **escalabilidade dos processos de captação e gestão de leads** dentro da AIESEC.
 
 ---
 
