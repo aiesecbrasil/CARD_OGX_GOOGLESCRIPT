@@ -10,7 +10,7 @@ O sistema atua como o **back-end responsável pela etapa final de execução e p
 Do ponto de vista técnico, a aplicação:
 - Recebe leads via **endpoint HTTP**
 - Realiza **validações e deduplicações** no Podio
-- Cria registros no **EXPA**
+- Cria ou atualiza registros no **EXPA**
 - Sincroniza dados no **Podio**
 - Mantém o **código versionado automaticamente no GitHub**, assegurando rastreabilidade e governança técnica
 
@@ -21,10 +21,12 @@ Esta solução contribui diretamente para a **eficiência operacional**, **confi
 ## 📌 Visão Geral
 
 - 📥 Recebe leads via **HTTP POST**
-- 🔍 Verifica duplicidade no **Podio**
-- 🌐 Cria pessoa no **EXPA**
+- 🔄 Gera ou renova token de acesso Podio com cache
+- 🔍 Verifica duplicidade no **Podio** usando Buscar
+- 🌐 Cria ou atualiza lead no **EXPA**
 - 🗂️ Cria ou atualiza item no **Podio**
 - 📤 Versiona automaticamente o código no **GitHub**
+- ✅ Padroniza respostas com a classe Resposta
 
 ---
 
@@ -75,7 +77,8 @@ Autenticação com serviços externos.
 - OAuth do Podio
 
 ### Funções
-- getAccessToken(clientId, clientSecret, appId, appToken)
+- getAccessTokenCached() → retorna token válido do Podio  
+- Auth → classe que encapsula cache e refresh automático  
 
 ### Regras
 - ❌ Não criar ou atualizar dados  
@@ -89,12 +92,13 @@ Autenticação com serviços externos.
 Funções utilitárias reutilizáveis.
 
 ### Contém
-- Padronização de respostas
-- Manipulação segura de objetos
+- Padronização de respostas via Resposta 
+- Manipulação segura de objetos e campos Podio  
 
 ### Funções
-- respostaJson(status, message, data)
-- getField(item, fieldName)
+- respostaJson(status, message, data) 
+- getField(item, fieldName) → retorna campo específico de um item do Podio  
+- PodioUtils → classe para consultas e filtros combinados (nome, email, telefone, deduplicação)  
 
 ### Regras
 - ✅ Funções puras  
@@ -102,43 +106,31 @@ Funções utilitárias reutilizáveis.
 
 ---
 
-## 📄 buscar.gs
+## 📄 podioUtils.gs
 
 ### Responsabilidade
-Centralizar **todas as consultas externas**.
+Centralizar **todas as consultas externas ao Podio**.
 
 ### Contém
-
-#### ▶ Podio (REST)
-- Buscar por nome
-- Buscar por sobrenome
-- Buscar por e-mail
-- Buscar por telefone
-- Busca combinada e deduplicação
-
-#### ▶ EXPA / AIESEC (GraphQL)
-- Consulta de comitês (LC)
-- Normalização de nomes (ex: remover "AIESEC in")
-- Resolução de IDs internacionais
+- Classe PodioUtils  
+- Busca combinada e deduplicação  
+- Filtragem por campos: title, sobrenome-2, email, telefone
 
 ### Funções
-- buscarPorNome(accessToken, appId, nome)
-- buscarPorSobreNome(accessToken, appId, sobrenome)
-- buscarPorEmail(accessToken, appId, email)
-- buscarPorTelefone(accessToken, appId, telefone)
-- buscarItemCompleto(accessToken, appId, dados)
-- obterIdsComites(tokenExpa, nomeCL)
+- itemCompleto(dados) → retorna item correspondente ou null  
+- campo(fieldName, valor, multi) → busca por campo específico  
+- telefone(numero) → busca por telefone  
 
 ### Regras
 - ❌ Não criar ou atualizar dados  
 - ✅ Apenas leitura / consulta  
 
-----
+---
+
 ## 📄 cache.gs
 
 ### Responsabilidade
 Gerenciamento de access_token para APIs externas (Podio/EXPA) utilizando cache, renovação automática e refresh_token.  
-Evita múltiplas requisições desnecessárias e mantém tokens válidos sempre que possível.
 
 ### Contém
 - Busca de token no cache (buscaAcessToken)  
@@ -146,35 +138,10 @@ Evita múltiplas requisições desnecessárias e mantém tokens válidos sempre 
 - Renovação automática via refresh_token (refreshAccessToken)  
 - Função de alto nível para obter token válido (getAccessTokenCached)  
 
-### Funções e Parâmetros
-
-- buscaAcessToken(chave)  
-  - Parâmetros: chave (string) — chave do cache  
-  - Retorno: string|null — token válido ou null  
-  - Descrição: Busca no cache e renova se estiver prestes a expirar.
-
-- salvarToken(jsonAccessToken)  
-  - Parâmetros: jsonAccessToken (Object) — { access_token, refresh_token, expires_in }  
-  - Retorno: string — token válido  
-  - Descrição: Salva token no cache com expiração, máximo 6h.
-
-- refreshAccessToken(refreshToken)  
-  - Parâmetros: refreshToken (string) — token para gerar novo access_token  
-  - Retorno: Object — { access_token, refresh_token, expires_in }  
-  - Descrição: Renova token usando refresh_token via API OAuth.
-
-- getAccessTokenCached()  
-  - Parâmetros: nenhum  
-  - Retorno: string — token válido  
-  - Descrição: Retorna sempre um token válido, usando cache ou renovando.
-
 ### Regras
 - ✅ Sempre armazenar tokens válidos antes de retornar  
 - ✅ Renovar automaticamente se estiver prestes a expirar  
-- ✅ Limitar tempo de cache ao máximo permitido pelo Apps Script (6h)  
 - ❌ Nunca retornar token expirado  
-- ❌ Nunca armazenar dados sensíveis fora do cache temporário  
-- ❌ Não usar cache como fonte de verdade — apenas otimizaç
 
 ---
 
@@ -184,18 +151,17 @@ Evita múltiplas requisições desnecessárias e mantém tokens válidos sempre 
 Escrita de dados nos sistemas externos.
 
 ### Contém
-- Criação de lead no EXPA
-- Criação de lead no Podio
-- Atualização de lead existente
+- Classe Lead
+- Criação ou atualização de lead no EXPA  
+- Criação ou atualização de item no Podio  
 
 ### Funções
-- leadsExpa(tokenExpa, dados, email, telefone)
-- adicionarLeadOGX(accessToken, appId, tokenExpa, dados, email, telefone)
-- atualizarLead(accessToken, itemExistente, dados)
+- Lead.criarNoPodio(email, telefone, podioUtils) 
+- Lead.atualizarNoPodio(itemExistente, podioUtils)
 
 ### Regras
 - ✅ Validar dados antes do envio  
-- ❌ Nunca enviar valores inválidos (0, null, string errada) 
+- ❌ Nunca enviar valores inválidos  
 
 ---
 
@@ -205,33 +171,32 @@ Escrita de dados nos sistemas externos.
 Ponto de entrada da aplicação (endpoint).
 
 ### Contém
-- doPost(e)
-- executarComJSON()
+- doPost(e) → fluxo completo de recebimento, validação, autenticação, deduplicação e criação/atualização de leads  
 
 ### Fluxo
-1. Recebe JSON  
+1. Recebe JSON via HTTP POST  
 2. Valida payload  
-3. Autentica  
-4. Consulta duplicidade  
-5. Cria ou atualiza lead  
-6. Retorna resposta JSON  
+3. Autentica e obtém token Podio (Auth)  
+4. Consulta duplicidade usando PodioUtils
+5. Cria ou atualiza lead via Lead 
+6. Retorna resposta JSON padronizada via Resposta
 
 ### Regras
-- ❌ Não conter regras de integração  
-- ❌ Não conter regras de autenticação  
+- ❌ Não conter regras de integração externas  
+- ❌ Não conter regras de autenticação complexa  
 
 ---
 
 ## 📄 github.gs
 
 ### Responsabilidade
-- Integração com a API do GitHub.
-- Realizar o push automático do projeto para o GitHub.
+- Integração com a API do GitHub.  
+- Realizar push automático do projeto para o GitHub.
 
 ### Contém
-- Comunicação com GitHub Contents API
-- Leitura dos arquivos do Apps Script
-- Filtro de arquivos sensíveis
+- Comunicação com GitHub Contents API  
+- Leitura dos arquivos do Apps Script  
+- Filtro de arquivos sensíveis  
 - Commit automático
 
 ### Funções
@@ -240,40 +205,19 @@ Ponto de entrada da aplicação (endpoint).
 
 ### Regras
 - ❌ Não acessar variáveis sensíveis diretamente  
-- ✅ Usar apenas dados do env.gs
-- ❌ Ignorar env, testes e arquivos locais  
+- ✅ Usar apenas dados do env.gs 
 - ✅ Versionar apenas código válido  
-
 
 ---
 
 ## 🔄 Fluxo Geral
 
-## 🔄 Fluxo Geral do Projeto
-
-1. **doPost**  
-   Recebe o payload JSON via HTTP POST.
-
-2. **Cache → Buscar token**  
-   - Verifica se existe um access_token válido no cache.  
-   - Se estiver prestes a expirar, usa refresh_token para gerar novo.  
-   - Se não existir, gera novo token usando credenciais do app (CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN).
-
-3. **auth → Token Podio**  
-   - Autentica a aplicação no Podio utilizando o token obtido do cache ou gerado.  
-   - Garante que todas as chamadas subsequentes usem um token válido.
-
-4. **buscar → REST + GraphQL**  
-   - Realiza consultas externas, como:
-     - Podio (REST): buscar por nome, e-mail, telefone, deduplicação.
-     - EXPA / AIESEC (GraphQL): consulta de comitês, normalização de nomes, resolução de IDs internacionais.
-
-5. **leads → EXPA + Podio**  
-   - Criação ou atualização de leads nos sistemas externos com validação de dados.
-
-6. **utils → respostaJson**  
-   - Padroniza a resposta da API para o cliente.  
-   - Funções puras sem dependência de APIs externas.
+1. **doPost** → recebe payload JSON  
+2. **Auth** → busca token válido ou renova automaticamente  
+3. **PodioUtils** → consulta duplicidade, filtra por nome, email, telefone  
+4. **Lead** → cria ou atualiza lead no EXPA e Podio  
+5. **Resposta** → padroniza retorno JSON para o cliente  
+6. **GitHub** → versiona alterações do projeto automaticamente  
 
 ---
 
