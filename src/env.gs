@@ -5,10 +5,10 @@ function getEnv() {
   const APP_ID = scriptProperties.getProperty('APP_ID');
   const APP_TOKEN = scriptProperties.getProperty('APP_TOKEN');
   const TOKEN_EXPA = scriptProperties.getProperty('TOKEN_EXPA');
-  const GITHUB_TOKEN = scriptProperties.getProperty('GITHUB_TOKEN') // token do github;
-  const GITHUB_OWNER = scriptProperties.getProperty('GITHUB_OWNER') // seu user no github;
-  const GITHUB_REPO = scriptProperties.getProperty('GITHUB_REPO') // repositorio do github;
-  const GITHUB_BRANCH = scriptProperties.getProperty('GITHUB_BRANCH') // branch do  repositorio;
+  const GITHUB_TOKEN = scriptProperties.getProperty('GITHUB_TOKEN');
+  const GITHUB_OWNER = scriptProperties.getProperty('GITHUB_OWNER');
+  const GITHUB_REPO = scriptProperties.getProperty('GITHUB_REPO');
+  const GITHUB_BRANCH = scriptProperties.getProperty('GITHUB_BRANCH');
 
   if (!CLIENT_ID || !CLIENT_SECRET || !APP_ID || !APP_TOKEN) {
     throw new Error("As variáveis de ambiente não estão definidas. Rode Env() ou configure manualmente.");
