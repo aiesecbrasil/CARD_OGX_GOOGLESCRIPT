@@ -22,11 +22,3 @@ function getField(item, fieldName) {
   // Retorna o campo encontrado ou null caso não exista
   return field || null;
 }
-
-function conteudoEhIgual(conteudoLocal, conteudoGithubBase64) {
-  const githubDecoded = Utilities.newBlob(
-    Utilities.base64Decode(conteudoGithubBase64)
-  ).getDataAsString();
-
-  return conteudoLocal.trim() === githubDecoded.trim();
-}
