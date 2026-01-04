@@ -1,111 +1,42 @@
-class Auth {
-  /**
-   * Cria uma instância de Auth e já inicializa o token.
-   * 
-   * @param {string} chave - Chave do cache (default: "accessToken")
-   */
-  constructor(chave = "accessToken") {
-    /** @type {string} Chave usada para armazenar token no cache */
-    this.chave = chave;
+function getAccessToken(CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN) {
+  // URL do endpoint de autenticação do Podio
+  const authUrl = "https://podio.com/oauth/token";
 
-    /** @type {GoogleAppsScript.Cache.Cache} Cache do Apps Script */
-    this.cache = CacheService.getScriptCache();
+  // Payload que será enviado na requisição POST
+  // Contém tipo de grant e credenciais da aplicação
+  const payload = {
+    grant_type: "app",          // Tipo de autenticação (App)
+    client_id: CLIENT_ID,       // ID do cliente fornecido pelo Podio
+    client_secret: CLIENT_SECRET, // Segredo do cliente
+    app_id: APP_ID,             // ID do App no Podio
+    app_token: APP_TOKEN        // Token do App
+  };
 
-    /** @type {string} Access token válido */
-    this.token = this.getAccessToken(); // já inicializa token
+  // Faz a requisição POST para o Podio com o payload
+  // muteHttpExceptions: true permite tratar erros manualmente
+  const response = UrlFetchApp.fetch(authUrl, {
+    method: "POST",
+    payload: payload,
+    muteHttpExceptions: true
+  });
+
+  // Obtém o conteúdo da resposta como string
+  const content = response.getContentText();
+  let json;
+
+  // Tenta converter a resposta em JSON
+  // Se a resposta não for JSON válido, lança erro
+  try {
+    json = JSON.parse(content);
+  } catch (e) {
+    throw new Error("Resposta inválida ao gerar token (não é JSON): " + content);
   }
 
-  /**
-   * Obtém o access_token válido.
-   * - Verifica o cache
-   * - Renova se estiver prestes a expirar
-   * - Gera novo token se não existir
-   * 
-   * @returns {string} access_token válido
-   */
-  getAccessToken() {
-    let token = this._buscaCache();
-    if (token) return token;
-
-    const { CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN } = getEnv();
-    const novoToken = this._gerarNovoToken(CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN);
-
-    return this._salvarCache(novoToken);
+  // Verifica se o JSON retornou o access_token
+  if (!json.access_token) {
+    throw new Error("Não foi possível gerar o token: " + content);
   }
 
-  _buscaCache() {
-    const tokenCache = this.cache.get(this.chave);
-    if (!tokenCache) return null;
-    Logger.log(tokenCache)
-    const data = JSON.parse(tokenCache);
-    const agora = new Date().getTime();
-
-    if (agora >= (data.expiracao - 5 * 60 * 1000)) {
-      const novoToken = this._refreshToken(data.refresh_token);
-      Logger.log(novoToken)
-      return this._salvarCache(novoToken).token;
-    }
-
-    return data.access_token;
-  }
-
-  _salvarCache(jsonAccessToken) {
-    const data = {
-      access_token: jsonAccessToken.access_token,
-      refresh_token: jsonAccessToken.refresh_token,
-      expiracao: new Date().getTime() + jsonAccessToken.expires_in * 1000
-    };
-
-    const tempoExpiracao = Math.min(jsonAccessToken.expires_in, 21600);
-    this.cache.put(this.chave, JSON.stringify(data), tempoExpiracao);
-
-    return data.access_token;
-  }
-
-  _refreshToken(refreshToken) {
-    const { CLIENT_ID, CLIENT_SECRET } = getEnv();
-
-    const payload = {
-      grant_type: "refresh_token",
-      refresh_token: refreshToken,
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET
-    };
-
-    const response = UrlFetchApp.fetch("https://podio.com/oauth/token", {
-      method: "POST",
-      payload: payload,
-      muteHttpExceptions: true
-    });
-
-    const json = JSON.parse(response.getContentText());
-    if (!json.access_token) {
-      throw new Error("Erro ao atualizar token: " + response.getContentText());
-    }
-
-    return json;
-  }
-
-  _gerarNovoToken(CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN) {
-    const payload = {
-      grant_type: "app",
-      app_id: APP_ID,
-      app_token: APP_TOKEN,
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET
-    };
-
-    const response = UrlFetchApp.fetch("https://podio.com/oauth/token", {
-      method: "POST",
-      payload: payload,
-      muteHttpExceptions: true
-    });
-
-    const json = JSON.parse(response.getContentText());
-    if (!json.access_token) {
-      throw new Error("Erro ao gerar novo token: " + response.getContentText());
-    }
-
-    return json;
-  }
+  // Retorna o token de acesso válido
+  return json.access_token;
 }
