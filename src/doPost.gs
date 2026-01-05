@@ -1,55 +1,58 @@
 function doPost(e) {
-  //inicializa as variaveis de ambiente
+  // Inicializa variáveis de ambiente
   Env();
+  const resposta = new Resposta();
   try {
     // 1. Parse do body recebido
-    if (!e || !e.postData || !e.postData.contents) {
+    if (!e?.postData?.contents) {
       throw new Error("Nenhum dado enviado no corpo da requisição.");
     }
-    
-    const dados = JSON.parse(e.postData.contents);
-  
-    // 2. Recupera variáveis de ambiente
-    const { CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN, TOKEN_EXPA } = getEnv();
 
-    // 3. Gera token de acesso do Podio
-    const accessToken = getAccessToken(CLIENT_ID, CLIENT_SECRET, APP_ID, APP_TOKEN);
+    // 2. Parse do JSON recebido
+    const dados = JSON.parse(e.postData.contents);
+
+    // 3. Gera token de acesso do Podio com cache
+    const accessToken = new Auth().token;
+
+    // 4. Recupera variáveis de ambiente
+    const { APP_ID, TOKEN_EXPA } = getEnv();
+
+    // 5. Instancia a classe Lead
+    const leads = new Leads(dados,accessToken, APP_ID, TOKEN_EXPA);
+
+    // 6. Instancia do pesquisar
+    const buscar = new Buscar(accessToken,APP_ID);
     
-    // 4. Verifica se já existe um item correspondente
-    const itemExistente = buscarItemCompleto(accessToken, APP_ID, dados);
+    // 7. Verifica se já existe um item correspondente
+    const itemExistente = buscar.itemCompleto(dados);
     
-    // 5. Monta listas para validação de duplicidade
+    // 8. Monta listas para validação de duplicidade
     const listaEmails = dados.emails.map(e => e.email);
     const listaTelefones = dados.telefones.map(t => t.numero);
     
-    // 6. Se item já existe → atualiza
+    // 9. Se item já existe → atualiza
     if (itemExistente) {
-      const idAtualizado = atualizarLead(accessToken, itemExistente, dados);
-      return respostaJson("sucesso", "Lead de OGX atualizado com sucesso.", idAtualizado);
+      return leads.atualizarNoPodio(accessToken, itemExistente);;
     }
-    // 7. Verificação de duplicidade por email
+
+    // 8. Verificação de duplicidade por email
     for (const email of listaEmails) {
-      if (buscarPorEmail(accessToken, APP_ID, email).length > 0) {
+      if (buscar.campo("email", email, true).length > 0) {
         throw new Error("Já existe cadastro com esse(s) email(s).");
       }
     }
-  
-    // 8. Verificação de duplicidade por telefone
+
+    // 9. Verificação de duplicidade por telefone
     for (const telefone of listaTelefones) {
-      if (buscarPorTelefone(accessToken, APP_ID, telefone).length > 0) {
+      if (buscar.telefone(telefone).length > 0) {
         throw new Error("Já existe cadastro com esse(s) telefone(s).");
       }
     }
     
-    // 9. Cria novo lead no Podio
-    const novoLead = adicionarLeadOGX(accessToken, APP_ID, TOKEN_EXPA, dados, listaEmails[0], listaTelefones[0]);
-    // 10. Retorna resposta de sucesso
-    return respostaJson("sucesso", "Lead de OGX criado com sucesso.", novoLead);
+    return leads.criarNoPodio(listaEmails[0],listaTelefones[0]);
 
   } catch (error) {
     // Retorna JSON padronizado em caso de erro
-    return ContentService
-      .createTextOutput(JSON.stringify({ success: false, error: error.message }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return resposta.erro(error)
   }
 }
