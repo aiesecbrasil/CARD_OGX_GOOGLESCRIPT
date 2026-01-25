@@ -122,48 +122,71 @@ class Leads {
    * @returns {string} person_id
    */
   criarNoExpa(email, telefone) {
-    const url = 'https://auth.aiesec.org/users.json';
-    const idIntenacionalCL = this.obterIdsComites(this.nomeCL);
+  const url = 'https://auth.aiesec.org/users.json';
+  const idIntenacionalCL = this.obterIdsComites(this.nomeCL);
 
-    const payload = {
-      user: {
-        email: email,
-        first_name: this.nome,
-        last_name: this.sobrenome,
-        password: this.senha,
-        phone: telefone,
-        country_code: "55",
-        lc: idIntenacionalCL,
-        referral_type: 'Other',
-        allow_phone_communication: '0',
-        allow_term_and_condition: '1',
-        selected_programmes: [this.programa]
-      }
-    };
-
-    const options = {
-      method: 'POST',
-      headers: { 'Authorization': this.TOKEN_EXPA, 'Content-Type': 'application/json' },
-      payload: JSON.stringify(payload),
-      followRedirects: true,
-      muteHttpExceptions: true
-    };
-
-    try {
-      const response = UrlFetchApp.fetch(url, options);
-      const responseText = response.getContentText();
-
-      if (responseText.includes("<!DOCTYPE html>")) {
-        throw new Error("Resposta inesperada do servidor: HTML recebido");
-      }
-
-      const responseData = JSON.parse(response.getContentText());
-      return String(responseData.person_id).trim();
-    } catch (error) {
-      Logger.log("Erro ao criar lead: " + error);
-      throw new Error("Erro ao criar lead Expa: " + error.message);
+  const payload = {
+    user: {
+      email: email,
+      first_name: this.nome,
+      last_name: this.sobrenome,
+      password: this.senha,
+      phone: telefone,
+      country_code: "55",
+      lc: idIntenacionalCL,
+      referral_type: 'Other',
+      allow_phone_communication: '0',
+      allow_term_and_condition: '1',
+      selected_programmes: [this.programa]
     }
+  };
+
+  const options = {
+    method: 'POST',
+    headers: { 'Authorization': this.TOKEN_EXPA, 'Content-Type': 'application/json' },
+    payload: JSON.stringify(payload),
+    followRedirects: true,
+    muteHttpExceptions: true // Mantido para capturarmos o erro manualmente
+  };
+
+  try {
+    const response = UrlFetchApp.fetch(url, options);
+    const responseCode = response.getResponseCode();
+    const responseText = response.getContentText();
+
+    // 1. Verifica se retornou HTML (erro de servidor ou página de login)
+    if (responseText.includes("<!DOCTYPE html>")) {
+      throw new Error("Servidor EXPA retornou HTML inesperado.");
+    }
+
+    const responseData = JSON.parse(responseText);
+
+    // 2. Tratamento de erro específico para e-mail duplicado ou campos inválidos (Erro 400-499)
+    if (responseCode >= 400) {
+      let mensagemErro = responseData.errors || responseData.message || "Erro desconhecido";
+      
+      // Se o erro for especificamente e-mail duplicado
+      if (JSON.stringify(mensagemErro).toLowerCase().includes("email already exists") || 
+          JSON.stringify(mensagemErro).toLowerCase().includes("taken")) {
+        throw new Error("E-mail já cadastrado no sistema EXPA.");
+      }
+      
+      throw new Error("Erro na API EXPA (" + responseCode + "): " + JSON.stringify(mensagemErro));
+    }
+
+    // 3. Verifica se o person_id existe no sucesso
+    if (responseData && responseData.person_id) {
+      return String(responseData.person_id).trim();
+    } else {
+      throw new Error("Sucesso aparente, mas person_id não foi retornado.");
+    }
+
+  } catch (error) {
+    Logger.log("Erro ao criar lead: " + error.message);
+    // Repassa o erro para ser tratado na interface ou log principal
+    throw error; 
   }
+}
 
   /**
    * Consulta GraphQL para obter IDs de comitês
