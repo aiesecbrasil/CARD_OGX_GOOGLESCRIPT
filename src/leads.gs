@@ -38,7 +38,6 @@ class Leads {
       "Authorization": `Bearer ${this.access_token}`,
       "Content-Type": "application/json"
     };
-
     const cardOGX = {
       fields: {
         "di-ep-id-2": idExpa,
@@ -66,12 +65,86 @@ class Leads {
       payload: JSON.stringify(cardOGX),
       muteHttpExceptions: true
     });
-    
+
     try {
       const novoLead = JSON.parse(response.getContentText());
-      return resposta.sucesso("sucesso", "Lead de OGX criado com sucesso.", novoLead);
+      return resposta.sucesso("Lead de OGX criado com sucesso.", novoLead);
     } catch (e) {
       throw new Error("Resposta inválida (não é JSON): " + response.getContentText());
+    }
+  }
+
+  qualificacaoLead(item) {
+    const resposta = new Resposta();
+
+    try {
+      const itemID = Number(item.id);
+      const headers = {
+        "Authorization": `Bearer ${this.access_token}`,
+        "Content-Type": "application/json"
+      };
+
+      // ----- 1️⃣ Atualiza campos do item -----
+      const payload = { fields: {} };
+      if (item.curso) payload.fields["qual-seu-curso"] = item.curso;
+      if (item.idiomas) payload.fields["possui-outro-idioma"] = item.idiomas.map(id => parseInt(id, 10));
+      if (item.semestre) payload.fields["qual-semestre-do-curso"] = parseInt(item.semestre, 10);
+      if (item.area_atuacao) payload.fields["qual-sua-area-de-mercado"] = item.area_atuacao;
+      if (item.nivel_mercado) payload.fields["qual-seu-nivel-de-atuacao"] = parseInt(item.nivel_mercado, 10);
+
+      const urlItem = `https://api.podio.com/item/${itemID}`;
+      const updateResponse = UrlFetchApp.fetch(urlItem, {
+        method: "PUT",
+        headers: headers,
+        payload: JSON.stringify(payload),
+        muteHttpExceptions: true
+      });
+
+      Logger.log("PUT CODE (campos): " + updateResponse.getResponseCode());
+      Logger.log("PUT BODY (campos): " + updateResponse.getContentText());
+
+      // ----- 2️⃣ Upload do PDF (se houver) -----
+      if (item.file && item.fileName) {
+        const bytes = Utilities.base64Decode(item.file);
+        const arquivoBlob = Utilities.newBlob(bytes, "application/pdf", item.fileName);
+
+        const uploadResponse = UrlFetchApp.fetch("https://api.podio.com/file/", {
+          method: "post",
+          headers: { "Authorization": "Bearer " + this.access_token },
+          payload: {
+            source: arquivoBlob,
+            filename: item.fileName // ⚠️ obrigatório
+          },
+          muteHttpExceptions: true
+        });
+
+        Logger.log("UPLOAD CODE: " + uploadResponse.getResponseCode());
+        Logger.log("UPLOAD BODY: " + uploadResponse.getContentText());
+
+        const uploadResult = JSON.parse(uploadResponse.getContentText());
+        if (!uploadResult.file_id) throw new Error("Erro ao enviar arquivo: " + uploadResponse.getContentText());
+
+        // ----- 3️⃣ Anexa ao item sem sobrescrever arquivos existentes -----
+        const attachPayload = {
+          ref_type: "item",
+          ref_id: itemID
+        };
+        const attachResponse = UrlFetchApp.fetch(`https://api.podio.com/file/${uploadResult.file_id}/attach`, {
+          method: "POST",
+          headers: headers,
+          payload: JSON.stringify(attachPayload),
+          muteHttpExceptions: true
+        });
+
+        Logger.log("ATTACH CODE: " + attachResponse.getResponseCode());
+        Logger.log("ATTACH BODY: " + attachResponse.getContentText());
+      }
+
+      return resposta.sucesso("Lead de OGX criado com sucesso.", itemID);
+
+    } catch (error) {
+      Logger.log("Erro: " + error.message);
+      return resposta.erro(error.message);
     }
   }
 
@@ -122,71 +195,71 @@ class Leads {
    * @returns {string} person_id
    */
   criarNoExpa(email, telefone) {
-  const url = 'https://auth.aiesec.org/users.json';
-  const idIntenacionalCL = this.obterIdsComites(this.nomeCL);
+    const url = 'https://auth.aiesec.org/users.json';
+    const idIntenacionalCL = this.obterIdsComites(this.nomeCL);
 
-  const payload = {
-    user: {
-      email: email,
-      first_name: this.nome,
-      last_name: this.sobrenome,
-      password: this.senha,
-      phone: telefone,
-      country_code: "55",
-      lc: idIntenacionalCL,
-      referral_type: 'Other',
-      allow_phone_communication: '0',
-      allow_term_and_condition: '1',
-      selected_programmes: [this.programa]
-    }
-  };
-
-  const options = {
-    method: 'POST',
-    headers: { 'Authorization': this.TOKEN_EXPA, 'Content-Type': 'application/json' },
-    payload: JSON.stringify(payload),
-    followRedirects: true,
-    muteHttpExceptions: true // Mantido para capturarmos o erro manualmente
-  };
-
-  try {
-    const response = UrlFetchApp.fetch(url, options);
-    const responseCode = response.getResponseCode();
-    const responseText = response.getContentText();
-
-    // 1. Verifica se retornou HTML (erro de servidor ou página de login)
-    if (responseText.includes("<!DOCTYPE html>")) {
-      throw new Error("Servidor EXPA retornou HTML inesperado.");
-    }
-
-    const responseData = JSON.parse(responseText);
-
-    // 2. Tratamento de erro específico para e-mail duplicado ou campos inválidos (Erro 400-499)
-    if (responseCode >= 400) {
-      let mensagemErro = responseData.errors || responseData.message || "Erro desconhecido";
-      
-      // Se o erro for especificamente e-mail duplicado
-      if (JSON.stringify(mensagemErro).toLowerCase().includes("email already exists") || 
-          JSON.stringify(mensagemErro).toLowerCase().includes("taken")) {
-        throw new Error("E-mail já cadastrado no sistema EXPA.");
+    const payload = {
+      user: {
+        email: email,
+        first_name: this.nome,
+        last_name: this.sobrenome,
+        password: this.senha,
+        phone: telefone,
+        country_code: "55",
+        lc: idIntenacionalCL,
+        referral_type: 'Other',
+        allow_phone_communication: '0',
+        allow_term_and_condition: '1',
+        selected_programmes: [this.programa]
       }
-      
-      throw new Error("Erro na API EXPA (" + responseCode + "): " + JSON.stringify(mensagemErro));
-    }
+    };
 
-    // 3. Verifica se o person_id existe no sucesso
-    if (responseData && responseData.person_id) {
-      return String(responseData.person_id).trim();
-    } else {
-      throw new Error("Sucesso aparente, mas person_id não foi retornado.");
-    }
+    const options = {
+      method: 'POST',
+      headers: { 'Authorization': this.TOKEN_EXPA, 'Content-Type': 'application/json' },
+      payload: JSON.stringify(payload),
+      followRedirects: true,
+      muteHttpExceptions: true // Mantido para capturarmos o erro manualmente
+    };
 
-  } catch (error) {
-    Logger.log("Erro ao criar lead: " + error.message);
-    // Repassa o erro para ser tratado na interface ou log principal
-    throw error; 
+    try {
+      const response = UrlFetchApp.fetch(url, options);
+      const responseCode = response.getResponseCode();
+      const responseText = response.getContentText();
+
+      // 1. Verifica se retornou HTML (erro de servidor ou página de login)
+      if (responseText.includes("<!DOCTYPE html>")) {
+        throw new Error("Servidor EXPA retornou HTML inesperado.");
+      }
+
+      const responseData = JSON.parse(responseText);
+
+      // 2. Tratamento de erro específico para e-mail duplicado ou campos inválidos (Erro 400-499)
+      if (responseCode >= 400) {
+        let mensagemErro = responseData.errors || responseData.message || "Erro desconhecido";
+
+        // Se o erro for especificamente e-mail duplicado
+        if (JSON.stringify(mensagemErro).toLowerCase().includes("email already exists") ||
+          JSON.stringify(mensagemErro).toLowerCase().includes("taken")) {
+          throw new Error("E-mail já cadastrado no sistema EXPA.");
+        }
+
+        throw new Error("Erro na API EXPA (" + responseCode + "): " + JSON.stringify(mensagemErro));
+      }
+
+      // 3. Verifica se o person_id existe no sucesso
+      if (responseData && responseData.person_id) {
+        return String(responseData.person_id).trim();
+      } else {
+        throw new Error("Sucesso aparente, mas person_id não foi retornado.");
+      }
+
+    } catch (error) {
+      Logger.log("Erro ao criar lead: " + error.message);
+      // Repassa o erro para ser tratado na interface ou log principal
+      throw error;
+    }
   }
-}
 
   /**
    * Consulta GraphQL para obter IDs de comitês
