@@ -89,7 +89,7 @@ class Leads {
       if (item.curso) payload.fields["qual-seu-curso"] = item.curso;
       if (item.idiomas) payload.fields["possui-outro-idioma"] = item.idiomas.map(id => parseInt(id, 10));
       if (item.semestre) payload.fields["qual-semestre-do-curso"] = parseInt(item.semestre, 10);
-      if (item.area_atuacao) payload.fields["qual-sua-area-de-mercado"] = item.area_atuacao;
+      if (item.area_atuacao) payload.fields["qual-sua-area-de-atuacao"] = item.area_atuacao;
       if (item.nivel_mercado) payload.fields["qual-seu-nivel-de-atuacao"] = parseInt(item.nivel_mercado, 10);
 
       const urlItem = `https://api.podio.com/item/${itemID}`;
