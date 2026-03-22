@@ -49,6 +49,7 @@ class Leads {
         "produto": this.idProduto,
         "aiesec-mais-proxima": this.idComite,
         "tag-origem-2": this.idCategoria,
+        "status-expa": 1,
         "eu-concordo-com-a-coleta-e-uso-dos-meus-dados-conforme-": this.idAutorizacao
       },
       tags: []
@@ -184,9 +185,7 @@ class Leads {
       payload: JSON.stringify(payload),
       muteHttpExceptions: true
     });
-
-    const idAtualizado = item.app_item_id;
-    return resposta.sucesso("sucesso", "Lead de OGX criado com sucesso.", idAtualizado);
+    return resposta.sucesso("Lead de OGX criado com sucesso.", item);
   }
 
   /**
@@ -208,7 +207,8 @@ class Leads {
         country_code: "55",
         lc: idIntenacionalCL,
         referral_type: 'Other',
-        allow_phone_communication: '0',
+        allow_phone_communication: '1',
+        allow_email_communication: '1',
         allow_term_and_condition: '1',
         selected_programmes: [this.programa]
       }
@@ -233,7 +233,40 @@ class Leads {
       }
 
       const responseData = JSON.parse(responseText);
+      console.log(JSON.stringify(responseData, null, 2))
+      const query = `
+        mutation updatePerson($id: ID!, $person: PersonInput!) {
+          updatePerson(id: $id, person: $person) {
+            id
+            dob
+          }
+        }
+      `;
 
+      const variables = {
+        id: responseData.person_id,
+        person: {
+          dob: this.dataNascimento,       // Formato YYYY-MM-DD
+        }
+      };
+
+      const atualizar = {
+        method: 'POST',                   // No Apps Script, prefira 'post'
+        contentType: 'application/json',
+        headers: {
+          "Authorization": this.TOKEN_EXPA // Certifique-se que inclui "Bearer ..."
+        },
+        payload: JSON.stringify({         // MUDANÇA CRUCIAL: de 'body' para 'payload'
+          query: query,
+          variables: variables
+        }),
+        muteHttpExceptions: true          // Permite ler o erro se a API responder 400/500
+      };
+
+      const update = UrlFetchApp.fetch('https://gis-api.aiesec.org/graphql', atualizar);
+      const responseBody = JSON.parse(update.getContentText());
+
+      console.log(JSON.stringify(responseBody, null, 2));
       // 2. Tratamento de erro específico para e-mail duplicado ou campos inválidos (Erro 400-499)
       if (responseCode >= 400) {
         let mensagemErro = responseData.errors || responseData.message || "Erro desconhecido";
