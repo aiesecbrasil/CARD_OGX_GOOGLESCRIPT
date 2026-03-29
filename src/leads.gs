@@ -55,6 +55,7 @@ class Leads {
       tags: []
     };
 
+    if (this.universidade)cardOGX.fields["universidade"] = this.universidade;
     if (this.idAnuncio) cardOGX.fields["tag-meio-2-2"] = this.idAnuncio;
     if (this.tag) { // se for string vira array; se for array, usa direto 
       cardOGX.tags = Array.isArray(this.tag) ? this.tag : [this.tag];
@@ -171,11 +172,10 @@ class Leads {
         "produto": this.idProduto,
         "aiesec-mais-proxima": this.idComite,
         "tag-origem-2": this.idCategoria,
-        "status": 42
+        "status": 1
       },
       tags: Array.isArray(this.tag) ? this.tag : (this.tag ? [this.tag] : [])
     };
-
     if (this.idAnuncio) payload.fields["tag-meio-2-2"] = this.idAnuncio;
 
     UrlFetchApp.fetch(url, {
@@ -185,7 +185,8 @@ class Leads {
       payload: JSON.stringify(payload),
       muteHttpExceptions: true
     });
-    return resposta.sucesso("Lead de OGX criado com sucesso.", item);
+    this.enviarComentario(itemID,"Lead se Reinscreveu no Site da aiesec no brasil")
+    return resposta.sucesso("Lead de OGX criado com sucesso.", { item_id: itemID });
   }
 
   /**
@@ -302,7 +303,7 @@ class Leads {
   obterIdsComites(termoBusca) {
     const url = "https://gis-api.aiesec.org/graphql";
     if (termoBusca !== "AIESEC no Brasil") {
-      const termoLimpo = termoBusca.replace(/^AIESEC em /i, "").trim();
+      const termoLimpo = termoBusca.replace(/^AIESEC em /i, "").replace(/^AIESEC no /i, "").trim();
       const queryGraphQLComiteLocal = `
         query {
           committees(filters: { parent: [1606], q: "${termoLimpo}" }) {
@@ -331,5 +332,16 @@ class Leads {
       }
     }
     return 1606;
+  }
+
+  enviarComentario(itemId, texto) {
+    const url = `https://api.podio.com/comment/item/${itemId}`;
+    const options = {
+      method: "post",
+      headers: { "Authorization": `Bearer ${this.access_token}` },
+      contentType: "application/json",
+      payload: JSON.stringify({ "value": texto })
+    };
+    UrlFetchApp.fetch(url, options);
   }
 }
