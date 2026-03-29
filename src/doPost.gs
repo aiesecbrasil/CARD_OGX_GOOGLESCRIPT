@@ -34,7 +34,7 @@ function doPost(e) {
     
     // 9. Se item já existe → atualiza
     if (itemExistente) {
-      return leads.atualizarNoPodio(accessToken, itemExistente);;
+      return leads.atualizarNoPodio(itemExistente);;
     }
 
     // 8. Verificação de duplicidade por email
