@@ -302,7 +302,7 @@ class Leads {
    */
   obterIdsComites(termoBusca) {
     const url = "https://gis-api.aiesec.org/graphql";
-    if (termoBusca !== "AIESEC no Brasil") {
+    if (termoBusca !== "AIESEC no Brasil" || termoBusca !== "") {
       const termoLimpo = termoBusca.replace(/^AIESEC em /i, "").replace(/^AIESEC no /i, "").trim();
       const queryGraphQLComiteLocal = `
         query {
