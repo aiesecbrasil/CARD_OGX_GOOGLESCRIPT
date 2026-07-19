@@ -326,7 +326,8 @@ class Leads {
       try {
         const resposta = UrlFetchApp.fetch(url, opcoes);
         const json = JSON.parse(resposta.getContentText());
-        return json.data.committees.data.map(c => c.id)[0];
+        console.log(json)
+        return json.data.committees.data[0].id;
       } catch (erro) {
         throw new Error("Erro na consulta GraphQL: " + erro);
       }
