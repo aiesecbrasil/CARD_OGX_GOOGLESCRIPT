@@ -19,7 +19,7 @@ function doPost(e) {
 
     // 5. Instancia a classe Lead
     const leads = new Leads(dados,accessToken, APP_ID, TOKEN_EXPA);
-    if (dados.id){
+    if (dados?.id){
       return leads.qualificacaoLead(dados)
     }
     // 6. Instancia do pesquisar
